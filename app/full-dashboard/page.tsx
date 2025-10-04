@@ -16,7 +16,7 @@ import {
   Camera, Calendar, TrendingUp, Bell, Settings, LogOut, Sun, Moon, Droplets, 
   Shield, Plus, ChevronRight, ArrowLeft, Clock, Target, Award, AlertTriangle, 
   CheckCircle, Edit, Trash2, Cloud, Thermometer, Wind, Eye, Activity, 
-  BarChart3, Users, Lightbulb, Star, Zap, RefreshCw 
+  BarChart3, Users, Lightbulb, Star, Zap, RefreshCw, Package, ShoppingCart 
 } from "lucide-react"
 import Link from "next/link"
 import { ChanseyFAB } from "@/components/chansey-fab"
@@ -24,6 +24,7 @@ import { CliniQLogo } from "@/components/clini-q-logo"
 import { ProfileDropdown } from "@/components/profile"
 import { useToast } from "@/hooks/use-toast"
 import RoutineTab from "@/components/RoutineTab"
+import { formatSimpleINR } from "@/lib/currency"
 interface DashboardData {
   user: {
     name: string
@@ -100,6 +101,9 @@ export default function FullDashboardPage() {
   const [refreshingAppointments, setRefreshingAppointments] = useState(false)
   const [skinReports, setSkinReports] = useState<any[]>([])
   const [loadingReports, setLoadingReports] = useState(false)
+  // Products preview state for Products tab
+  const [productsPreview, setProductsPreview] = useState<any[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(false)
   const { toast } = useToast()
 
   // Live clock + time slot detection
@@ -275,6 +279,26 @@ export default function FullDashboardPage() {
     }
   }
 
+  // Fetch a small preview list of products for the dashboard tab
+  const fetchProductsPreview = async () => {
+    try {
+      setLoadingProducts(true)
+      const response = await fetch("/api/products")
+      if (response.ok) {
+        const data = await response.json()
+        // Take first 4 as featured preview
+        setProductsPreview((data.products || []).slice(0, 4))
+      } else {
+        setProductsPreview([])
+      }
+    } catch (error) {
+      console.error("Error fetching products preview:", error)
+      setProductsPreview([])
+    } finally {
+      setLoadingProducts(false)
+    }
+  }
+
   const deleteReport = async (reportId: string) => {
     try {
       const response = await fetch(`/api/skin-reports?id=${reportId}`, {
@@ -376,6 +400,7 @@ export default function FullDashboardPage() {
     fetchCommunity()
     fetchRoutineProgress()
     fetchSkinReports()
+    fetchProductsPreview()
   }, [])
 
   // Refresh data when page becomes visible (e.g., returning from book-appointment)
@@ -660,6 +685,12 @@ export default function FullDashboardPage() {
     >
       Reports
     </TabsTrigger>
+    <TabsTrigger
+      value="products"
+      className="flex-shrink-0 px-4 py-2 text-center data-[state=active]:bg-pink-100 data-[state=active]:text-pink-700"
+    >
+      Products
+    </TabsTrigger>
   </TabsList>
 
 
@@ -708,7 +739,7 @@ export default function FullDashboardPage() {
                     <CardTitle className="text-xl text-gray-800">Quick Actions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-3 gap-4">
                       <Button
                         className="h-20 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-xl flex flex-col gap-2"
                         asChild
@@ -726,6 +757,16 @@ export default function FullDashboardPage() {
                         <Link href="/book-appointment">
                           <Calendar className="w-6 h-6 text-pink-600" />
                           <span>Book Appointment</span>
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-20 border-pink-200 hover:bg-pink-50 rounded-xl flex flex-col gap-2 bg-transparent"
+                        asChild
+                      >
+                        <Link href="/products">
+                          <ShoppingCart className="w-6 h-6 text-pink-600" />
+                          <span>Shop Products</span>
                         </Link>
                       </Button>
                     </div>
@@ -1260,7 +1301,60 @@ export default function FullDashboardPage() {
             )}
           </TabsContent>
 
+          {/* Products Tab */}
+          <TabsContent value="products" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-800">Featured Products</h3>
+              <Button asChild className="bg-pink-600 hover:bg-pink-700">
+                <Link href="/products">View All</Link>
+              </Button>
+            </div>
 
+            {loadingProducts ? (
+              <Card className="border-pink-100">
+                <CardContent className="p-8 text-center">
+                  <RefreshCw className="w-8 h-8 animate-spin text-pink-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading products...</p>
+                </CardContent>
+              </Card>
+            ) : productsPreview.length === 0 ? (
+              <Card className="border-pink-100">
+                <CardContent className="p-8 text-center">
+                  <Package className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600">No products available right now</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {productsPreview.map((p: any) => (
+                  <Card key={p.id} className="border-pink-100 hover:shadow-lg transition-all duration-300">
+                    <div className="relative overflow-hidden">
+                      <img src={p.image} alt={p.name} className="w-full h-44 object-cover" />
+                      {!p.inStock && (
+                        <Badge className="absolute top-2 right-2 bg-gray-500 text-white">Out of Stock</Badge>
+                      )}
+                    </div>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-semibold text-gray-800 line-clamp-2">{p.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold text-gray-800">{formatSimpleINR(p.price)}</span>
+                          {p.originalPrice && (
+                            <span className="text-sm text-gray-500 line-through">{formatSimpleINR(p.originalPrice)}</span>
+                          )}
+                        </div>
+                        <Button asChild variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50">
+                          <Link href="/products">View</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           {/* Community Tab */}
           <TabsContent value="community" className="space-y-6">

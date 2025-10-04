@@ -5,6 +5,7 @@ import './globals.css'
 import AuthProvider from '@/components/providers/session-provider'
 import { Toaster } from 'sonner'
 import { LanguageProvider } from '@/contexts/language-context'
+import { CartProvider } from '@/contexts/cart-context'
 
 export const metadata: Metadata = {
   title: 'Clini-Q',
@@ -49,8 +50,9 @@ export default function RootLayout({
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
         <AuthProvider>
           <LanguageProvider>
-            {children}
-            <Toaster 
+            <CartProvider>
+              {children}
+              <Toaster 
               position="bottom-right"
               toastOptions={{
                 classNames: {
@@ -80,6 +82,7 @@ export default function RootLayout({
               offset="16px"
               pauseWhenPageIsHidden={false}
             />
+            </CartProvider>
           </LanguageProvider>
         </AuthProvider>
       </body>
