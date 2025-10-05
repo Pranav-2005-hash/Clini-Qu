@@ -4,9 +4,9 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Shield, Sparkles, Users, Camera, BarChart3, Calendar, MessageCircle, HeartIcon, Mail, Phone, MapPin, Twitter, Instagram, Map, Home, Zap, MessageCircleMore } from "lucide-react"
+import { Shield, Sparkles, Users, Camera, BarChart3, Calendar, MessageCircle, HeartIcon, Mail, Phone, MapPin, Twitter, Instagram, Map, Home, Zap, MessageCircleMore, ChevronDown } from "lucide-react"
 import Link from "next/link"
-import { CliniQLogo } from "@/components/clini-q-logo"
+import Image from "next/image"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useLanguage } from "@/contexts/language-context"
 import dynamic from 'next/dynamic';
@@ -43,9 +43,9 @@ const NavLink = ({ href, sectionId, children, isActive = false }: NavLinkProps) 
   <a
     href={href}
     onClick={(e) => sectionId ? scrollToSection(e, sectionId) : null}
-    className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer group overflow-hidden ${
+    className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer group overflow-hidden after:content-[''] after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-pink-200 after:to-rose-200 after:opacity-0 after:scale-x-0 group-hover:after:opacity-100 group-hover:after:scale-x-100 after:transition after:duration-300 ${
       isActive 
-        ? 'text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300' 
+        ? 'text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 after:opacity-100 after:scale-x-100' 
         : 'text-gray-700 hover:text-pink-600'
     }`}
   >
@@ -135,6 +135,56 @@ const MobileNav = () => {
 
 export default function LandingPage() {
   const { t } = useLanguage()
+  const [activeSection, setActiveSection] = React.useState('hero')
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['hero', 'features', 'contact']
+      const scrollPosition = window.scrollY + 100
+
+      for (const section of sections) {
+        const element = document.getElementById(section)
+        if (element) {
+          const { offsetTop, offsetHeight } = element
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section)
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Global cursor-reactive background variables (smooth via rAF)
+  React.useEffect(() => {
+    let raf = 0 as number | 0
+    let lastX = typeof window !== 'undefined' ? window.innerWidth / 2 : 0
+    let lastY = typeof window !== 'undefined' ? window.innerHeight / 2 : 0
+
+    const apply = () => {
+      raf = 0
+      const root = document.documentElement
+      root.style.setProperty('--mx', `${lastX}px`)
+      root.style.setProperty('--my', `${lastY}px`)
+    }
+
+    const onMove = (e: MouseEvent) => {
+      lastX = e.clientX
+      lastY = e.clientY
+      if (!raf) raf = requestAnimationFrame(apply)
+    }
+
+    apply()
+    window.addEventListener('mousemove', onMove as any, { passive: true } as any)
+    return () => {
+      window.removeEventListener('mousemove', onMove as any)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
   
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-pink-50 to-amber-50 overflow-hidden">
@@ -145,6 +195,33 @@ export default function LandingPage() {
         noiseIntensity={0.4}
         className="opacity-30"
       />
+      {/* Cursor-reactive background overlay spanning the whole page */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
+        {/* Primary pink glow following cursor */}
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            background:
+              'radial-gradient(650px circle at var(--mx) var(--my), rgba(244,114,182,0.18), transparent 60%)',
+          }}
+        />
+        {/* Rose accent offset glow */}
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            background:
+              'radial-gradient(900px circle at calc(var(--mx) + 200px) calc(var(--my) + 100px), rgba(251,113,133,0.12), transparent 70%)',
+          }}
+        />
+        {/* Soft blush layer for depth */}
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background:
+              'radial-gradient(700px circle at calc(var(--mx) - 150px) calc(var(--my) + 150px), rgba(253,164,175,0.10), transparent 70%)',
+          }}
+        />
+      </div>
       {/* Decorative elements */}
       <div className="absolute -right-20 -top-20 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
       <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
@@ -161,8 +238,18 @@ export default function LandingPage() {
               }}
               className="group flex items-center gap-3 hover:opacity-90 transition-opacity"
             >
-              <div className="bg-gradient-to-br from-pink-500 to-rose-500 p-1.5 rounded-xl shadow-lg transform transition-transform duration-300 group-hover:scale-105">
-                <CliniQLogo size="md" className="text-white" />
+              <div className="bg-gradient-to-br from-pink-500 to-rose-500 p-1.5 rounded-xl shadow-lg transform transition-transform duration-500 group-hover:scale-105">
+                <div className="bg-white/10 rounded-lg p-1 relative overflow-hidden">
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/30 to-transparent"></span>
+                  <Image
+                    src="/brand/logo.png"
+                    alt="Clini-Q logo"
+                    width={40}
+                    height={40}
+                    className="rounded-[10px] drop-shadow-sm transition-transform duration-500 group-hover:rotate-1"
+                    priority
+                  />
+                </div>
               </div>
               <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-rose-600">
                 Clini-Q
@@ -174,19 +261,21 @@ export default function LandingPage() {
               <NavLink 
                 href="#" 
                 sectionId="hero"
-                isActive={true}
+                isActive={activeSection === 'hero'}
               >
                 Home
               </NavLink>
               <NavLink 
                 href="#features"
                 sectionId="features"
+                isActive={activeSection === 'features'}
               >
                 Features
               </NavLink>
               <NavLink 
                 href="#contact"
                 sectionId="contact"
+                isActive={activeSection === 'contact'}
               >
                 Get in Touch
               </NavLink>
@@ -220,43 +309,83 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section id="hero" className="min-h-[80vh] flex items-center justify-center container mx-auto px-4 py-16 relative z-10">
         <div className="max-w-4xl mx-auto text-center relative group">
-          {/* Glow effect on hover */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-400/30 to-rose-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500 group-hover:duration-200 -z-10"></div>
-          
-          <Card className="border-white/20 shadow-2xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
-            <CardHeader className="pb-6">
-              <div className="flex justify-center mb-4">
-                <Badge className="bg-white/30 backdrop-blur-sm text-pink-700 border border-white/30 hover:bg-white/40 px-4 py-1.5 rounded-full shadow-sm transition-colors duration-300">
-                  <Sparkles className="w-4 h-4 mr-1.5 text-pink-600" />
-                  AI-Powered Dermatology
-                </Badge>
-              </div>
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-pink-200/40 to-rose-200/40 rounded-full blur opacity-0 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                  <CliniQLogo size="xl" className="relative z-10 drop-shadow-lg" />
-                </div>
-              </div>
-              <CardTitle className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-rose-600 mb-6 drop-shadow-sm">
-                {t('home.title')}
-              </CardTitle>
-              <CardDescription className="text-xl text-gray-800 max-w-2xl mx-auto leading-relaxed font-medium">
-                {t('home.subtitle')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Button
-                size="lg"
-                className="group relative bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-full px-8 py-6 text-lg font-semibold shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 overflow-hidden border-2 border-white/20 hover:border-white/30"
-                asChild
-              >
-                <Link href="/signup">
-                  <span className="relative z-10">{t('home.startJourney')}</span>
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Hero content placed directly on page */}
+          <div className="flex justify-center mb-4">
+            <Badge className="bg-white/30 backdrop-blur-sm text-pink-700 border border-white/30 hover:bg-white/40 px-4 py-1.5 rounded-full shadow-sm transition-colors duration-300">
+              <Sparkles className="w-4 h-4 mr-1.5 text-pink-600" />
+              AI-Powered Dermatology
+            </Badge>
+          </div>
+          <div className="flex justify-center mb-6">
+            <div className="relative inline-block animate-tilt hover:scale-[1.02] transition-transform duration-700">
+              <div className="absolute -inset-4 bg-gradient-to-r from-pink-200/40 to-rose-200/40 rounded-full blur opacity-0 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+              <Image
+                src="/brand/logo.png"
+                alt="Clini-Q logo"
+                width={160}
+                height={160}
+                className="relative z-10 drop-shadow-lg rounded-2xl"
+                priority
+              />
+            </div>
+          </div>
+          <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-rose-600 mb-6 drop-shadow-sm">
+            {t('home.title')}
+          </h1>
+          <p className="text-xl text-gray-800 max-w-2xl mx-auto leading-relaxed font-medium">
+            {t('home.subtitle')}
+          </p>
+
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              size="lg"
+              className="group relative bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-full px-8 py-6 text-lg font-semibold shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 overflow-hidden border-2 border-white/20 hover:border-white/30"
+              asChild
+            >
+              <Link href="/signup">
+                <span className="relative z-10">{t('home.startJourney')}</span>
+                <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full px-8 py-6 text-lg font-semibold"
+              asChild
+            >
+              <a href="#features" onClick={(e) => scrollToSection(e, 'features')}>
+                {t('home.learnMore')}
+              </a>
+            </Button>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex items-center justify-center gap-2 rounded-full bg-white/50 backdrop-blur-sm px-3 py-2 border border-white/30 text-gray-700">
+              <Shield className="w-4 h-4 text-pink-600" />
+              <span className="text-sm font-medium">{t('home.trustSecure')}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 rounded-full bg-white/50 backdrop-blur-sm px-3 py-2 border border-white/30 text-gray-700">
+              <Users className="w-4 h-4 text-pink-600" />
+              <span className="text-sm font-medium">{t('home.trustUsers')}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 rounded-full bg-white/50 backdrop-blur-sm px-3 py-2 border border-white/30 text-gray-700">
+              <Sparkles className="w-4 h-4 text-pink-600" />
+              <span className="text-sm font-medium">{t('home.trustReviewed')}</span>
+            </div>
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <a
+              href="#features"
+              onClick={(e) => scrollToSection(e, 'features')}
+              className="group inline-flex flex-col items-center text-pink-600 hover:text-rose-600"
+            >
+              <span className="sr-only">Scroll to features</span>
+              <span className="animate-bounce rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm p-2 shadow-sm">
+                <ChevronDown className="w-5 h-5" />
+              </span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -551,7 +680,7 @@ export default function LandingPage() {
       <footer className="container mx-auto px-4 py-8 border-t border-pink-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <CliniQLogo size="sm" />
+            <Image src="/brand/logo.png" alt="Clini-Q logo" width={24} height={24} className="rounded-md" />
             <span className="text-gray-600 dark:text-gray-400">© 2025 Clini-Q. All rights reserved.</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-500 dark:text-gray-400">
