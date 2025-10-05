@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import type { FormEvent } from "react"
 import { CliniQLogo } from "@/components/clini-q-logo"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,6 @@ import { signIn, SignInResponse } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import dynamic from 'next/dynamic';
-import React from 'react';
 import { useLanguage } from "@/contexts/language-context"
 
 const SilkBackground = dynamic(() => import('@/components/silk-background'), {
@@ -32,7 +31,7 @@ export default function LoginPage() {
   const router = useRouter()
   
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 

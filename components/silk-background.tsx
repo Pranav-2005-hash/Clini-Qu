@@ -28,8 +28,8 @@ const SilkBackground: React.FC<SilkBackgroundProps> = ({
       style={{
         '--silk-color': cssColor,
         '--silk-speed': `${speed}s`,
-        '--silk-scale': scale,
-        '--silk-noise': noiseIntensity,
+        '--silk-scale': `${scale}`,
+        '--silk-noise': `${noiseIntensity}`,
         '--silk-rotation': `${rotation}rad`
       } as React.CSSProperties & Record<string, string>}
     >

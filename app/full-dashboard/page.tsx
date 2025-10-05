@@ -147,12 +147,13 @@ export default function FullDashboardPage() {
   const [clock, setClock] = useState<string>("");
   const [refreshingAppointments, setRefreshingAppointments] = useState<boolean>(false);
   const [skinReports, setSkinReports] = useState<Array<{
-    _id: string;
-    condition: string;
-    confidence: number;
-    date: string;
-    imageUrl?: string;
+    id: string;
+    reportName: string;
+    conditions?: Array<{ name: string; confidence: number }>;
     recommendations?: string[];
+    urgentNotes?: string[];
+    createdAt: string;
+    updatedAt?: string;
   }>>([]);
   const [loadingReports, setLoadingReports] = useState<boolean>(false);
   // Products preview state for Products tab
@@ -1461,7 +1462,7 @@ export default function FullDashboardPage() {
                                     <Button
                                       size="sm"
                                       variant="ghost"
-                                      onClick={() => handleDeleteTip(tip._id || tip.id)}
+                                  onClick={() => { const id = tip._id ?? tip.id; if (id) handleDeleteTip(id); }}
                                       className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                                     >
                                       <Trash2 className="w-3 h-3 mr-1" />
@@ -1580,7 +1581,7 @@ export default function FullDashboardPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleDeleteSuccessStory(story._id || story.id)}
+                                onClick={() => { const id = story._id ?? story.id; if (id) handleDeleteSuccessStory(id); }}
                                 className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                               >
                                 <Trash2 className="w-3 h-3 mr-1" />

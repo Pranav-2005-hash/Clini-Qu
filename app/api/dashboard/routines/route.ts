@@ -114,22 +114,24 @@ export async function POST(request: NextRequest) {
         date: new Date(date)
       })
 
-    let result
     if (existingCompletion) {
       // Update existing completion
-      result = await db.collection("routineCompletions").updateOne(
+      await db.collection("routineCompletions").updateOne(
         { _id: existingCompletion._id },
         { $set: routineCompletion }
       )
+      return NextResponse.json({
+        message: "Routine completion saved successfully",
+        completion: { ...routineCompletion, _id: existingCompletion._id }
+      })
     } else {
       // Create new completion
-      result = await db.collection("routineCompletions").insertOne(routineCompletion)
+      const insertResult = await db.collection("routineCompletions").insertOne(routineCompletion)
+      return NextResponse.json({
+        message: "Routine completion saved successfully",
+        completion: { ...routineCompletion, _id: insertResult.insertedId }
+      })
     }
-
-    return NextResponse.json({
-      message: "Routine completion saved successfully",
-      completion: { ...routineCompletion, _id: result.insertedId || existingCompletion._id }
-    })
   } catch (error) {
     console.error("Routines POST API error:", error)
     return NextResponse.json(

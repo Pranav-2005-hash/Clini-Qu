@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <link rel="icon" href="/clini-q-logo.svg" />
+        <link rel="icon" href="/brand/logo.png" />
         <style>{`
           :root {
             --toast-background: #ffffff;
