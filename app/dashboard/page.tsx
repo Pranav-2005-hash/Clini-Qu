@@ -14,7 +14,6 @@ import {
   Stethoscope,
 } from "lucide-react"
 import Link from "next/link"
-import { ChanseyFAB } from "@/components/chansey-fab"
 import { CliniQLogo } from "@/components/clini-q-logo"
 import {
   DropdownMenu,
@@ -190,29 +189,29 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* AI Chatbot Card */}
+          {/* Routine Generator Card */}
           <Card className="group relative overflow-hidden bg-white/10 backdrop-blur-md ring-1 ring-white/20 hover:ring-rose-300/40 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-rose-200/40 rounded-2xl">
             <CardHeader className="text-center pb-4">
               <div className="w-16 h-16 bg-gradient-to-br from-rose-200/70 to-pink-200/70 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-200/40 transition-transform duration-300 group-hover:scale-105">
                 <Bot className="w-8 h-8 text-pink-600" />
               </div>
-              <CardTitle className="text-2xl text-gray-800 dark:text-gray-100">{t('nav.chat')}</CardTitle>
+              <CardTitle className="text-2xl text-gray-800 dark:text-gray-100">Routine Generator</CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-300">
-                Chat with Chansey AI, your friendly dermatology assistant for personalized skincare advice
+                Generate a skincare routine tailored to your latest diagnosis and profile
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <div className="mb-4 p-3 bg-pink-50 rounded-lg">
-                <p className="text-sm text-gray-600">💬 &ldquo;Ask me about skincare routines!&rdquo;</p>
-                <p className="text-xs text-gray-500">Available 24/7</p>
+                <p className="text-sm text-gray-600">💡 Uses your most recent AI analysis</p>
+                <p className="text-xs text-gray-500">Edit anytime on the generator page</p>
               </div>
               <Button
                 className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white rounded-full py-3 font-semibold shadow-lg transition-all duration-200 hover:shadow-rose-200/60 hover:-translate-y-0.5"
                 asChild
               >
-                <Link href="/chatbot">
+                <Link href="/routine-generator">
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  {t('dashboard.startChat')}
+                  Open Routine Generator
                 </Link>
               </Button>
             </CardContent>
