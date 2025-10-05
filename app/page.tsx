@@ -43,15 +43,17 @@ const NavLink = ({ href, sectionId, children, isActive = false }: NavLinkProps) 
   <a
     href={href}
     onClick={(e) => sectionId ? scrollToSection(e, sectionId) : null}
-    className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer group overflow-hidden after:content-[''] after:absolute after:left-4 after:right-4 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-gradient-to-r after:from-pink-200 after:to-rose-200 after:opacity-0 after:scale-x-0 group-hover:after:opacity-100 group-hover:after:scale-x-100 after:transition after:duration-300 ${
+    className={`relative px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer group overflow-hidden ${
       isActive 
-        ? 'text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 after:opacity-100 after:scale-x-100' 
+        ? 'text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300' 
         : 'text-gray-700 hover:text-pink-600'
     }`}
   >
     <span className="relative z-10 flex items-center gap-2">
       {children}
     </span>
+    {/* hover/active underline */}
+    <span className={`pointer-events-none absolute left-4 right-4 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-pink-200 to-rose-200 transition-all duration-300 ${isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'} group-hover:opacity-100 group-hover:scale-x-100`}></span>
     {!isActive && (
       <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-pink-100 to-rose-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 rounded-full"></span>
     )}
@@ -161,12 +163,12 @@ export default function LandingPage() {
 
   // Global cursor-reactive background variables (smooth via rAF)
   React.useEffect(() => {
-    let raf = 0 as number | 0
+    let raf: number | null = null
     let lastX = typeof window !== 'undefined' ? window.innerWidth / 2 : 0
     let lastY = typeof window !== 'undefined' ? window.innerHeight / 2 : 0
 
     const apply = () => {
-      raf = 0
+      raf = null
       const root = document.documentElement
       root.style.setProperty('--mx', `${lastX}px`)
       root.style.setProperty('--my', `${lastY}px`)
@@ -175,14 +177,14 @@ export default function LandingPage() {
     const onMove = (e: MouseEvent) => {
       lastX = e.clientX
       lastY = e.clientY
-      if (!raf) raf = requestAnimationFrame(apply)
+      if (raf === null) raf = requestAnimationFrame(apply)
     }
 
     apply()
-    window.addEventListener('mousemove', onMove as any, { passive: true } as any)
+    window.addEventListener('mousemove', onMove, { passive: true })
     return () => {
-      window.removeEventListener('mousemove', onMove as any)
-      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('mousemove', onMove)
+      if (raf !== null) cancelAnimationFrame(raf)
     }
   }, [])
   

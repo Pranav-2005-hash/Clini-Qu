@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -27,31 +27,50 @@ import RoutineTab from "@/components/RoutineTab"
 import { formatSimpleINR } from "@/lib/currency"
 interface DashboardData {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
   metrics: {
-    skinHealthScore: number
-    weeklyProgress: number
-    totalAnalyses: number
-    routineCompletionRate: number
-    upcomingAppointments: number
-  }
-  recentActivity: any[]
-  appointments: any[]
-  reminders: any[]
-  weeklyProgress: any[]
-  routine : {
-    morning: [
-      "Cleanse: Gently removes oil",
-      "Serum: Niacinamide for acne"
-    ],
-    evening: [
-      "Cleanse: Double cleanse",
-      "Moisturize: Oil-free cream"
-    ],
-    note: "Consistency is key! Follow daily."
+    skinHealthScore: number;
+    weeklyProgress: number;
+    totalAnalyses: number;
+    routineCompletionRate: number;
+    upcomingAppointments: number;
+  };
+  recentActivity: Array<{
+    title: string;
+    description: string;
+    score: number;
+    date: string;
+  }>;
+  appointments: Array<{
+    _id: string;
+    id: string;
+    doctorName: string;
+    status: string;
+    specialty: string;
+    time: string;
+    date: string;
+  }>;
+  reminders: Array<{
+    _id: string;
+    title: string;
+    description: string;
+    dueDate: string;
+    type: string;
+    frequency: string;
+    completed: boolean;
+  }>;
+  weeklyProgress: Array<{
+    date: string;
+    completed: number;
+    total: number;
+  }>;
+  routine: {
+    morning: string[];
+    evening: string[];
+    note: string;
   };
 }
 
@@ -67,44 +86,107 @@ interface WeatherRecommendations {
   tips: string[]
 }
 
+type TimeSlot = "morning" | "afternoon" | "evening" | "night";
+
 export default function FullDashboardPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
-  const [weatherData, setWeatherData] = useState<WeatherRecommendations | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("overview")
-  const [communityStats, setCommunityStats] = useState<{ activeMembers: number; tipsShared: number; successStories: number } | null>(null)
-  const [communityTips, setCommunityTips] = useState<Array<{ _id?: string; id?: string; userId?: string; ownerEmail?: string; userName?: string; content: string; createdAt?: string }>>([])
-  const [successStories, setSuccessStories] = useState<Array<{ _id?: string; id?: string; userId?: string; ownerEmail?: string; userName?: string; title?: string; content?: string; createdAt?: string }>>([])
-  const [newTip, setNewTip] = useState<string>("")
-  const [newStoryTitle, setNewStoryTitle] = useState<string>("")
-  const [newStoryContent, setNewStoryContent] = useState<string>("")
-  const [isSubmittingStory, setIsSubmittingStory] = useState<boolean>(false)
-  const [showAddReminder, setShowAddReminder] = useState(false)
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherRecommendations | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [communityStats, setCommunityStats] = useState<{ 
+    activeMembers: number; 
+    tipsShared: number; 
+    successStories: number 
+  } | null>(null);
+  
+  const [communityTips, setCommunityTips] = useState<Array<{ 
+    _id?: string; 
+    id?: string; 
+    userId?: string; 
+    ownerEmail?: string; 
+    userName?: string; 
+    content: string; 
+    createdAt?: string 
+  }>>([]);
+  
+  const [successStories, setSuccessStories] = useState<Array<{ 
+    _id?: string; 
+    id?: string; 
+    userId?: string; 
+    ownerEmail?: string; 
+    userName?: string; 
+    title?: string; 
+    content?: string; 
+    createdAt?: string 
+  }>>([]);
+  
+  const [newTip, setNewTip] = useState<string>("");
+  const [newStoryTitle, setNewStoryTitle] = useState<string>("");
+  const [newStoryContent, setNewStoryContent] = useState<string>("");
+  const [isSubmittingStory, setIsSubmittingStory] = useState<boolean>(false);
+  const [showAddReminder, setShowAddReminder] = useState<boolean>(false);
   const [newReminder, setNewReminder] = useState({
     title: "",
     description: "",
     dueDate: "",
     type: "medication",
     frequency: "once"
-  })
+  });
+  
   const [morningRoutine, setMorningRoutine] = useState<string[]>([]);
   const [eveningRoutine, setEveningRoutine] = useState<string[]>([]);
   const [motivationalNote, setMotivationalNote] = useState<string>("");
-  const [reminders, setReminders] = useState<any[]>([])
+  const [reminders, setReminders] = useState<any[]>([]);
+  
   // Routine progress for Overview card
-  const [overviewMorningCompleted, setOverviewMorningCompleted] = useState(0)
-  const [overviewMorningTotal, setOverviewMorningTotal] = useState(0)
-  const [overviewEveningCompleted, setOverviewEveningCompleted] = useState(0)
-  const [overviewEveningTotal, setOverviewEveningTotal] = useState(0)
-  const [timeSlot, setTimeSlot] = useState<string>("")
-  const [clock, setClock] = useState<string>("")
-  const [refreshingAppointments, setRefreshingAppointments] = useState(false)
-  const [skinReports, setSkinReports] = useState<any[]>([])
-  const [loadingReports, setLoadingReports] = useState(false)
+  const [overviewMorningCompleted, setOverviewMorningCompleted] = useState<number>(0);
+  const [overviewMorningTotal, setOverviewMorningTotal] = useState<number>(0);
+  const [overviewEveningCompleted, setOverviewEveningCompleted] = useState<number>(0);
+  const [overviewEveningTotal, setOverviewEveningTotal] = useState<number>(0);
+  const [timeSlot, setTimeSlot] = useState<TimeSlot>("morning");
+  const [clock, setClock] = useState<string>("");
+  const [refreshingAppointments, setRefreshingAppointments] = useState<boolean>(false);
+  const [skinReports, setSkinReports] = useState<Array<{
+    _id: string;
+    condition: string;
+    confidence: number;
+    date: string;
+    imageUrl?: string;
+    recommendations?: string[];
+  }>>([]);
+  const [loadingReports, setLoadingReports] = useState<boolean>(false);
   // Products preview state for Products tab
-  const [productsPreview, setProductsPreview] = useState<any[]>([])
-  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [productsPreview, setProductsPreview] = useState<Array<{
+    _id: string;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    category: string;
+    rating: number;
+    featured?: boolean;
+  }>>([]);
+  const [loadingProducts, setLoadingProducts] = useState<boolean>(false);
   const { toast } = useToast()
+
+  // Fetch products preview for the dashboard
+  const fetchProductsPreview = useCallback(async () => {
+    try {
+      setLoadingProducts(true);
+      const response = await fetch('/api/products?limit=3');
+      const data = await response.json();
+      setProductsPreview(data.products || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast({
+        title: "Error",
+        description: "Could not load products. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [toast]);
 
   // Live clock + time slot detection
   useEffect(() => {
@@ -279,25 +361,6 @@ export default function FullDashboardPage() {
     }
   }
 
-  // Fetch a small preview list of products for the dashboard tab
-  const fetchProductsPreview = async () => {
-    try {
-      setLoadingProducts(true)
-      const response = await fetch("/api/products")
-      if (response.ok) {
-        const data = await response.json()
-        // Take first 4 as featured preview
-        setProductsPreview((data.products || []).slice(0, 4))
-      } else {
-        setProductsPreview([])
-      }
-    } catch (error) {
-      console.error("Error fetching products preview:", error)
-      setProductsPreview([])
-    } finally {
-      setLoadingProducts(false)
-    }
-  }
 
   const deleteReport = async (reportId: string) => {
     try {
