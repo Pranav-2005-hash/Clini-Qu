@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Camera, Upload, ArrowLeft, CheckCircle, AlertTriangle, Info, Download, Share } from "lucide-react"
 import Link from "next/link"
-import { ChanseyFAB } from "@/components/chansey-fab"
 import { CliniQLogo } from "@/components/clini-q-logo"
 import { useToast } from "@/hooks/use-toast"
 

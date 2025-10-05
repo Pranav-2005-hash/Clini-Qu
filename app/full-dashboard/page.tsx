@@ -19,7 +19,6 @@ import {
   BarChart3, Users, Lightbulb, Star, Zap, RefreshCw, Package, ShoppingCart 
 } from "lucide-react"
 import Link from "next/link"
-import { ChanseyFAB } from "@/components/chansey-fab"
 import { CliniQLogo } from "@/components/clini-q-logo"
 import { ProfileDropdown } from "@/components/profile"
 import { useToast } from "@/hooks/use-toast"
